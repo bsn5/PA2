@@ -1844,7 +1844,8 @@ void SCREEN_SETTINGS (void) {
 				eeprom_write_byte ((uint8_t *) &SETTINGS_BaudSave, (uint8_t) SETTINGS_Baud);
 				eeprom_write_byte ((uint8_t *) &SETTINGS_BaudFlag, (uint8_t) 1);
 				// Настройка скорости обмена
-				usart_set_baudrate (&USARTC0, SETTINGS_BaudValue[APD_BaudRateIndex], F_CPU);
+//Trofim 05.03.2025				usart_set_baudrate (&USARTC0, SETTINGS_BaudValue[APD_BaudRateIndex], F_CPU);
+				usart_set_baudrate (&USARTE0, SETTINGS_BaudValue[APD_BaudRateIndex], F_CPU);
 			}
 			if (SETTINGS_Cykle_T != SETTINGS_Cyckle) {
 				APD_FrameRefreshRate = SETTINGS_CyckleValue[SETTINGS_Cyckle - 1];
@@ -4780,7 +4781,8 @@ void DATE_ShowOn (uint8_t str, uint8_t col) {
 /************************************************************************/
 void ADP_TransStart (void) {
 	//timeS1 = s_timeout;
-	if ((usart_data_register_is_empty (&USARTC0))/* && (ADP_TransMesByteCnt == 0x0000)*/) {	
+// Trofim 05.03.2025	if ((usart_data_register_is_empty (&USARTC0))/* && (ADP_TransMesByteCnt == 0x0000)*/) {
+	if ((usart_data_register_is_empty (&USARTE0))/* && (ADP_TransMesByteCnt == 0x0000)*/) {		
 		ADP_flag = 0;			
 		// Отсылка первого байта посылки
 		//usart_put (&USARTC0, ADP_TransMesBuf[ADP_TransMesByteCnt]);
@@ -4796,8 +4798,10 @@ void ADP_TransStart (void) {
 		//DMA.CH0.ADDRCTRL = DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTDIR_FIXED_gc;
 		DMA.CH1.REPCNT = 1;
 		DMA.CH1.TRFCNT = ADP_TransMesLen-1;
-		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_USARTC0_DRE_gc;
-		usart_put (&USARTC0, ADP_TransMesBuf[0]);
+// Trofim 05.03.2025		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_USARTC0_DRE_gc;
+		DMA.CH1.TRIGSRC = DMA_CH_TRIGSRC_USARTE0_DRE_gc;
+// Trofim 05.03.2025		usart_put (&USARTC0, ADP_TransMesBuf[0]);
+		usart_put (&USARTE0, ADP_TransMesBuf[0]);
 		DMA.CH1.CTRLA |= DMA_CH_ENABLE_bm;
 		while(DMA.CH1.REPCNT) (void)0;
 		DMA.CH1.TRIGSRC = 0;
@@ -5249,8 +5253,10 @@ int main (void) {
 /************************************************************************/
 /*					Настройка DMA		ROMBUS					*/
 /************************************************************************/	
-	DMA.CH1.DESTADDR0 = ((volatile)&(USARTC0.DATA));
-	DMA.CH1.DESTADDR1 = ((volatile)&(USARTC0.DATA))>>8;
+//Trofim 05.03.2025	DMA.CH1.DESTADDR0 = ((volatile)&(USARTC0.DATA));
+//Trofim 05.03.2025	DMA.CH1.DESTADDR1 = ((volatile)&(USARTC0.DATA))>>8;
+	DMA.CH1.DESTADDR0 = ((volatile)&(USARTE0.DATA));
+	DMA.CH1.DESTADDR1 = ((volatile)&(USARTE0.DATA))>>8;
 	DMA.CH1.DESTADDR2 = 0;
 	DMA.CH1.ADDRCTRL = DMA_CH_SRCDIR_INC_gc | DMA_CH_DESTDIR_FIXED_gc;
 	DMA.CH1.CTRLA = DMA_CH_BURSTLEN_1BYTE_gc | DMA_CH_SINGLE_bm; 
@@ -5563,6 +5569,7 @@ for (IdFrame = 0; IdFrame <= (APD_FrameAmount - 1); IdFrame++) {
 /************************************************************************/
 // Настройка PIN3 на выход (передача)
 	PORTE.DIR |= TX0;
+
 //	PORTE.OUT |= TX0;
 // Настройка PIN2 на вход (приём)
 	PORTE.DIR &= ~RX0;
@@ -5764,10 +5771,10 @@ EventStorage_BOT = (- 1) * (uint8_t) eeprom_read_byte ((uint8_t *) &EventStorage
 				
 				if ((usart_data_register_is_empty (&USARTE0)) && (REGSAVE_MesByteCnt == 0)) {
 					// Отсылка первого символа сообщения
-					usart_put (&USARTE0, * (REGSAVE_Buff + REGSAVE_MesByteCnt/* - 1*/));
+// Trofim 05.03.2025					usart_put (&USARTE0, * (REGSAVE_Buff + REGSAVE_MesByteCnt/* - 1*/));
 					++ REGSAVE_MesByteCnt; // Инкремент счётчика символов комманды
 					// Передача задачи отсылки комманды прерыванию TX
-					usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_MED_gc);
+// Trofim 05.03.2025					usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_MED_gc);
 					LCD_Refresh = 1;
 				}
 			} else {
@@ -6076,13 +6083,13 @@ EventStorage_BOT = (- 1) * (uint8_t) eeprom_read_byte ((uint8_t *) &EventStorage
 							if ((usart_data_register_is_empty (&USARTE0)) && (RMD_CfgCmdCharCnt == 0) && (RMD_CfgCmdAck)) {
 								RMD_CfgCmdAck = 0;	// Сбрасывается флаг квитирования комманды
 								// Отсылка первого символа комманды
-								usart_put (&USARTE0, RMD_Cfg[RMD_CfgCmdCnt][RMD_CfgCmdCharCnt + 1]);
+// Trofim 05.03.2025								usart_put (&USARTE0, RMD_Cfg[RMD_CfgCmdCnt][RMD_CfgCmdCharCnt + 1]);
 								if (Mode == MODE_INTRO) LCD_PutStrNum (3, 8, RMD_CfgCmdCnt, (uint8_t *) "...................");
 								if (Mode == MODE_TRANSP_PROGRESS) LCD_PutStrNum (3, 0, RMD_CfgCmdCnt, (uint8_t *) "...................");
 							
 								++ RMD_CfgCmdCharCnt; // Инкремент счётчика символов комманды
 								// Передача задачи отсылки комманды прерыванию TX
-								usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_MED_gc);
+// Trofim 05.03.2025								usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_MED_gc);
 							}
 							RMD_Config_STATE = CHECK;
 						} else {
@@ -7836,13 +7843,13 @@ ISR (USARTE0_TXC_vect) {
 		case NET_MODE_CONFIG:
 			if ((RMD_CfgCmdCharCnt <= (RMD_Cfg[RMD_CfgCmdCnt][0] - 1)) && (RMD_CfgCmdCharCnt != 0)) {
 							
-				usart_put (&USARTE0, RMD_Cfg[RMD_CfgCmdCnt][RMD_CfgCmdCharCnt + 1]);
+// Trofim 05.03.2025				usart_put (&USARTE0, RMD_Cfg[RMD_CfgCmdCnt][RMD_CfgCmdCharCnt + 1]);
 
 				++ RMD_CfgCmdCharCnt;
 				if (RMD_CfgCmdCharCnt > RMD_Cfg[RMD_CfgCmdCnt][0] - 1) {
 					RMD_CfgCmdCharCnt = 0x00;
 					++ RMD_CfgCmdCnt;
-					usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_OFF_gc);
+// Trofim 05.03.2025					usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_OFF_gc);
 				}
 			}
 			break;
@@ -7855,13 +7862,13 @@ ISR (USARTE0_TXC_vect) {
 		case NET_MODE_REGSAVE:
 			if ((REGSAVE_MesByteCnt < REG_BLOCK_SIZE) && (REGSAVE_MesByteCnt != 0)) {
 
-				usart_put (&USARTE0, * (REGSAVE_Buff + REGSAVE_MesByteCnt));
+// Trofim 05.03.2025				usart_put (&USARTE0, * (REGSAVE_Buff + REGSAVE_MesByteCnt));
 				
 				++ REGSAVE_MesByteCnt;
 				if (REGSAVE_MesByteCnt >= REG_BLOCK_SIZE) {
 					REGSAVE_MesByteCnt = 0;
 					++ REGSAVE_MesCnt;
-					usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_OFF_gc);
+// Trofim 05.03.2025					usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_OFF_gc);
 				}
 			}
 			break;
@@ -7884,7 +7891,7 @@ ISR (USARTE0_TXC_vect) {
 }
 ISR (USARTE0_RXC_vect) {
 	// Забираем байт из буфера
-	RMD_RecMesCharBuf = usart_get (&USARTE0);
+// Trofim 05.03.2025	RMD_RecMesCharBuf = usart_get (&USARTE0);
 	
 	switch (NET_Mode) {
 		case NET_MODE_CONFIG:
@@ -7914,9 +7921,11 @@ ISR (USARTE0_RXC_vect) {
 			}
 			break;
 		case NET_MODE_TRANSP:
-			if (usart_data_register_is_empty (&USARTC0)) {
+// Trofim 05.03.2025			if (usart_data_register_is_empty (&USARTC0)) {
+			if (usart_data_register_is_empty (&USARTE0)) {
 				// Передача принятого байта по радиоканалу в RS-232
-				usart_put (&USARTC0, RMD_RecMesCharBuf);
+// Trofim 05.03.2025				usart_put (&USARTC0, RMD_RecMesCharBuf);
+				usart_put (&USARTE0, RMD_RecMesCharBuf);
 			}
 			break;
 		case NET_MODE_REGSAVE:
@@ -7983,9 +7992,11 @@ ISR (USARTE0_RXC_vect) {
 			break;
 	}
 }*/
-ISR (USARTC0_RXC_vect) {
+// Trofim 05.03.2025 ISR (USARTC0_RXC_vect) {
+ISR (USARTE0_RXC_vect) {
 	// Забираем байт из буфера
-	ADP_RecMesCharBuf = usart_get (&USARTC0);
+// Trofim 05.03.2025	ADP_RecMesCharBuf = usart_get (&USARTC0);
+	ADP_RecMesCharBuf = usart_get (&USARTE0);
 	switch (NET_Mode) {
 		case NET_MODE_CONFIG:
 			break;
@@ -8009,8 +8020,10 @@ ISR (USARTC0_RXC_vect) {
 			ADP_RecMesBuf[ADP_RecMesLen++] = ADP_RecMesCharBuf;
 			break;
 		case NET_MODE_TRANSP:
+// Trofim 08.03.2025			if (usart_data_register_is_empty (&USARTC0)) {
 			if (usart_data_register_is_empty (&USARTE0)) {
 				// передача принятого байта по RS-232 в радиоканал
+// Trofim 05.03.2025				usart_put (&USARTC0, ADP_RecMesCharBuf);
 				usart_put (&USARTE0, ADP_RecMesCharBuf);
 			}
 			break;
