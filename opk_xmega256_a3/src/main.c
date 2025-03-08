@@ -7838,6 +7838,7 @@ s_timeout++;
 /************************************************************************/
 /*                             Радиомодем                               */
 /************************************************************************/
+/*
 ISR (USARTE0_TXC_vect) {
 	switch (NET_Mode) {
 		case NET_MODE_CONFIG:
@@ -7875,20 +7876,10 @@ ISR (USARTE0_TXC_vect) {
 		default:
 			break;
 	}
-/*
-	if (TIMER_RMDCfgEn) {
-		if ((RMD_CfgCmdCharCnt <= (RMD_Cfg[RMD_CfgCmdCnt][0] - 1)) && (RMD_CfgCmdCharCnt != 0)) {
-			usart_put (&USARTE0, RMD_Cfg[RMD_CfgCmdCnt][RMD_CfgCmdCharCnt + 1]);
-			++ RMD_CfgCmdCharCnt;
-			if (RMD_CfgCmdCharCnt > RMD_Cfg[RMD_CfgCmdCnt][0] - 1) {	
-				RMD_CfgCmdCharCnt = 0x00;
-				++ RMD_CfgCmdCnt;
-				usart_set_tx_interrupt_level (&USARTE0, USART_TXCINTLVL_OFF_gc);
-			}
-		}
-	}
-*/
+
 }
+*/
+/*
 ISR (USARTE0_RXC_vect) {
 	// Забираем байт из буфера
 // Trofim 05.03.2025	RMD_RecMesCharBuf = usart_get (&USARTE0);
@@ -7933,40 +7924,9 @@ ISR (USARTE0_RXC_vect) {
 		default:
 			break;
 	}		
-/*		
-	RMD_RecMesCharBuf = usart_get (&USARTE0);
-	// Приём в режиме конфигурации
-	if (TIMER_RMDCfgEn) {		
-		if ((RMD_CfgAckMesCharCnt <= (RMD_CfgAckMesLen - 1)) && (RMD_CfgAckMesReady == 0)) {
-			RMD_CfgAckMes[RMD_CfgAckMesCharCnt] = RMD_RecMesCharBuf;
-			++ RMD_CfgAckMesCharCnt;
-			if (RMD_CfgAckMesCharCnt > (RMD_CfgAckMesLen - 1)) {
-				RMD_CfgAckMesCharCnt = 0;
-				RMD_CfgAckMesReady = 1;
-			}
-		}
-	}
-	
-	// Приём в обычном режиме
-	if (RMD_RecEn) {
-		// Ищем символ начала посылки - '$'
-		if (RMD_RecMesCharBuf == '$') {
-			RMD_RecMesCharCnt = 0;
-			RMD_RecMesInProgress = 1;
-			RMD_RecMesReady = 0;
-		}	
-		if ((RMD_RecMesInProgress) && (RMD_RecMesCharCnt <= RMD_RecMesBufLen - 1)) {
-			if (RMD_RecMesCharCnt == RMD_RecMesBufLen - 1) {
-//				LCD_Refresh = 1;
-				RMD_RecMesInProgress = 0;
-				RMD_RecMesReady = 1;
-			}
-			RMD_RecMesBuf[RMD_RecMesCharCnt] = RMD_RecMesCharBuf;
-			++ RMD_RecMesCharCnt;
-		}
-	}	
-*/
+
 }
+*/
 /************************************************************************/
 /*                             RS-232 ADP                               */
 /************************************************************************/
